@@ -4,7 +4,7 @@ block_cipher = None
 
 
 a = Analysis(['gui.py'],
-             pathex=['C:\\Users\\ryomi\\Documents\\python\\caravan-heart'],
+             pathex=[],
              binaries=[],
              datas=[('monsters.txt', '.')],
              hiddenimports=['json'],
