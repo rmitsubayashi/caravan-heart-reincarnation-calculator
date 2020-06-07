@@ -3,7 +3,7 @@ echo
 if [ -e .commit ]
     then
     rm .commit
-    pyinstaller --onedir gui.spec
+    pyinstaller --onedir -y gui.spec
     git add dist
     git commit -m "update executable" --no-verify
 fi
