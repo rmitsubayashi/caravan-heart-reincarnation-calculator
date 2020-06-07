@@ -1,0 +1,10 @@
+#!/bin/sh
+echo
+if [ -e .commit ]
+    then
+    rm .commit
+    pyinstaller --onedir gui.spec
+    git add dist
+    git commit -m "update executable" --no-verify
+fi
+exit
