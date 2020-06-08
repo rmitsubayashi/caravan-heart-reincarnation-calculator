@@ -13,7 +13,7 @@ smallFont = ("Meiryo", 8)
 
 window = Tk()
 window.title("キャラバンハート転身計算ツール")
-window.geometry('400x350')
+window.geometry('400x400')
 instructionLabel = Label(window, text="現在のステータスを入力してください", font=largeFont)
 instructionLabel.pack(side = TOP)
 
@@ -24,7 +24,7 @@ monsterNameList = []
 for monster in data:
     monsterNameList.append(monster.monster_name)
 monsterSelectCombo.config(values = monsterNameList)
-monsterSelectCombo.current(1)
+monsterSelectCombo.current(0)
 monsterSelectCombo.pack(side = TOP)
 
 statsInputLabel = Label(window, text="ステータス", font=mediumFont)
@@ -95,10 +95,23 @@ expLimitCheck.pack(side = TOP)
 expLimitInput=Entry(window, width=20, state='disabled')
 expLimitInput.pack(side = TOP)
 
+endMonsterSelectLabel = Label(window, text="転生後のモンスター名", font=mediumFont)
+endMonsterSelectLabel.pack(side = TOP)
+endMonsterSelectCombo = Combobox(window, state="readonly")
+endMonsterNameList = []
+for monster in data:
+    endMonsterNameList.append(monster.monster_name)
+endMonsterSelectCombo.config(values = monsterNameList)
+endMonsterSelectCombo.current(0)
+endMonsterSelectCombo.pack(side = TOP)
+
 def clicked():
     monster = monsterSelectCombo.get()
     monsterTables = [ m for m in data if m.monster_name == monster ]
     monsterTable = monsterTables[0].table
+    endMonster = endMonsterSelectCombo.get()
+    endMonsterTables = [ m for m in data if m.monster_name == endMonster ]
+    endMonsterTable = endMonsterTables[0].table
     lvl = int(lvlInput.get().strip() or 1) 
     hp = int(hpInput.get().strip() or 0)
     mp = int(mpInput.get().strip() or 0)
@@ -111,7 +124,7 @@ def clicked():
     exp = int(expLimitInput.get().strip() or 0)
     if expLimitState.get() == False:
         exp = 0
-    path, stats = analyzer.findBestPath(monsterTable, lvl, stats, exp)
+    path, stats = analyzer.findBestPath(monsterTable, endMonsterTable, lvl, stats, exp)
     pathText = gui_text_formatter.formatReincarnateTimingMessage(path, exp)
     resultDetailsLabel.configure(text=pathText)
 btn = Button(window, text="決定", command=clicked)

@@ -7,7 +7,7 @@ def formatReincarnateTimingMessage(levelList, expLimit=0):
         if level < currLvl:
             allTimings += str(currLvl) + " "
         currLvl = level
-    if allTimings == 0:
+    if allTimings == "":
         return '転生せずレベル{}まで育てるのがベストです！！'.format(maxLvl)
     if expLimit == 0:
         return '次はレベル{}で転生するのが良さそうです'.format(allTimings)

@@ -42,14 +42,15 @@ def rankMostStatsPerExp(ranking, data):
         insertIntoRanking(ranking, monster.monster_name, currStats)
 
 def addToQueue(queue, toAdd):
-    for index, element in enumerate(queue):
-        if toAdd[1] < element[1]:
+    cost = toAdd[1]
+    for index, queueItem in enumerate(queue):
+        if cost < queueItem[1]:
             queue.insert(index, toAdd)
             return
     queue.append(toAdd)
 
 # startingStats: [hp,mp,att,def,spd,int]
-def findBestPath(monsterTable, startingLevel, startingStats, expLimit=0):
+def findBestPath(startingMonsterTable, endingMonsterTable, startingLevel, startingStats, expLimit=0):
     # Thinking of leveling up/reincarnating as paths
     # Lv1 -> Lv2 -> ... -> Lv10 -> Lv11 -> Lv12
     # or Lv1 -> Lv2 -> ... -> Lv10 -> Lv1 -> Lv2
@@ -62,14 +63,35 @@ def findBestPath(monsterTable, startingLevel, startingStats, expLimit=0):
     maxCost = 0
     bestPath = [-1] 
     bestStats = [-1,-1,-1,-1,-1,-1]
-    #path(levels/reincarnations), cost(exp required), value([hp,mp,att,def,spd,int])
-    addToQueue(queue,([startingLevel], 0, startingStats))
+    #path(levels/reincarnations), cost(exp required), value([hp,mp,att,def,spd,int]), monster table to reference
+    addToQueue(queue,([startingLevel], 0, startingStats, startingMonsterTable))
     while len(queue) > 0:
         next = queue.pop(0)
         currPath = next[0]
         currCost = next[1]
         currStats = next[2]
+        monsterTable = next[3]
+        if expLimit == 0:
+            shouldStop = False
+            # stop when we know when to reincarnate
+            if len(queue) == 0:
+                for index, path in enumerate(reversed(currPath)):
+                    if path == 1 and index != len(currPath)-1:
+                        shouldStop = True
+                        break
+            if shouldStop:
+                continue
+        
         lastPath = currPath[-1]
+        if lastPath == 99:
+            continue
+        nextPathIndex = lastPath - 1
+        nextCost = int(monsterTable.hp[nextPathIndex].experience_required)
+        if nextPathIndex > 0:
+            nextCost -= int(monsterTable.hp[nextPathIndex-1].experience_required)
+        nextCost += currCost
+        if expLimit > 0 and nextCost > expLimit:
+            continue
         # reincarnate if we can and should
         # should: if we are in the midst of testing a reincarnation (len(queue) == 1),
         #         we should not have to reincarnate during the testing phase
@@ -85,29 +107,9 @@ def findBestPath(monsterTable, startingLevel, startingStats, expLimit=0):
             newCost = currCost
             newPath = currPath.copy()
             newPath.append(1)
-            addToQueue(queue, (newPath, newCost, reincarnatedStats))
+            addToQueue(queue, (newPath, newCost, reincarnatedStats, endingMonsterTable))
         # normal leveling
-        if lastPath == 99:
-            continue
         nextStats = currStats.copy()
-        nextPathIndex = lastPath - 1
-        nextCost = int(monsterTable.hp[nextPathIndex].experience_required)
-        if nextPathIndex > 0:
-            nextCost -= int(monsterTable.hp[nextPathIndex-1].experience_required)
-        nextCost += currCost
-        if expLimit == 0:
-            shouldStop = False
-            # stop when we know when to reincarnate
-            if len(queue) == 0:
-                for index, path in enumerate(reversed(currPath)):
-                    if path == 1 and index != len(currPath)-1:
-                        shouldStop = True
-                        break
-            if shouldStop:
-                continue
-        elif nextCost > expLimit:
-            continue
-
         nextStats[0] = min(999, nextStats[0] + int(monsterTable.hp[nextPathIndex].amount))
         nextStats[1] = min(999, nextStats[1] + int(monsterTable.mp[nextPathIndex].amount))
         nextStats[2] = min(999, nextStats[2] + int(monsterTable.attack[nextPathIndex].amount))
@@ -134,23 +136,12 @@ def findBestPath(monsterTable, startingLevel, startingStats, expLimit=0):
             if maxValue == 999*6:
                 continue
 
-        addToQueue(queue, (nextPath, nextCost, nextStats))
-    return bestPath, bestStats
-
-def rankMostStatsPerExpWithReincarnation(ranking, data):
-    for monster in data:
-        path, stats = findBestPath(monster.table, 1, [500,500,500,500,500,500])
-        print(monster.monster_name)
-        print(*path)
-        print(*stats)
-        print()
-            
-
-
-
-        
+        addToQueue(queue, (nextPath, nextCost, nextStats, monsterTable))
+    return bestPath, bestStats        
 
 #data = readData("monsters.txt")
-#ranking = []
-#subdata = data[-2:-1]
-#rankMostStatsPerExpWithReincarnation(ranking, data)
+#monster = data[0]
+#monster2 = data[1]
+#path, stats = findBestPath(monster.table, monster2.table, 1, [0,0,0,0,0,0])
+#print(monster.monster_name + " " + monster2.monster_name)
+#print(*path)
